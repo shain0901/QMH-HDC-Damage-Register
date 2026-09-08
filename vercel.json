@@ -1,0 +1,14 @@
+{
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" },
+    { "src": "api/blob-upload-url.js", "use": "@vercel/node" },
+    { "src": "frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+  ],
+  "routes": [
+    { "src": "/api/blob-upload-url", "dest": "api/blob-upload-url.js" },
+    { "src": "/api/(.*)", "dest": "api/index.py" },
+    { "src": "/assets/(.*)", "dest": "frontend/dist/assets/$1" },
+    { "src": "/maps/(.*)", "dest": "frontend/dist/maps/$1" },
+    { "src": "/(.*)", "dest": "frontend/dist/index.html" }
+  ]
+}
