@@ -15,7 +15,7 @@ from app.db.connection import get_conn
 # TODO: confirm/replace these email addresses before running against production.
 USERS = [
     dict(email="shain@hanmersolutions.co.nz", name="Shain Holdsworth", role="admin"),
-    dict(email="TODO-rhys@example.com", name="Rhys Wilson", role="editor"),
+    dict(email="rhysisnothere@hotmail.co.nz", name="Rhys Wilson", role="editor"),
     dict(email="TODO-garth@example.com", name="Garth Smith", role="editor"),
     dict(email="TODO-salym@example.com", name="Salym Colello", role="reporter_repairer"),
 ]
