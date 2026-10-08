@@ -12,6 +12,7 @@ import jwt
 from fastapi import Cookie, Depends, HTTPException, Request, Response
 
 from app.config import settings
+from app.db.connection import get_conn
 
 COOKIE_NAME = "qmh_session"
 SESSION_DAYS = 30
@@ -90,7 +91,17 @@ def get_current_user(request: Request, qmh_session: Optional[str] = Cookie(defau
     data = _decode(token)
     if not data:
         raise HTTPException(status_code=401, detail="Session expired — please sign in again.")
-    return CurrentUser(id=data["sub"], email=data["email"], name=data["name"], role=data["role"])
+
+    # The token only proves who signed in. Their current role and whether they're still active
+    # come from the database on every request, so deactivating someone or changing their role
+    # takes effect immediately rather than when their 30-day session runs out.
+    with get_conn() as conn:
+        row = conn.execute(
+            "select id, email, name, role, active from users where id = %s", (data["sub"],)
+        ).fetchone()
+    if not row or not row["active"]:
+        raise HTTPException(status_code=401, detail="This account is no longer active.")
+    return CurrentUser(id=str(row["id"]), email=row["email"], name=row["name"], role=row["role"])
 
 
 def require(*capabilities: str):

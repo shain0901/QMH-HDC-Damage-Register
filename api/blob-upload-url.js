@@ -10,6 +10,37 @@
 // Docs: https://vercel.com/docs/vercel-blob/client-upload — re-check this against current docs on
 // first deploy; Vercel's Blob SDK has moved fast historically.
 import { handleUpload } from '@vercel/blob/client';
+import { jwtVerify } from 'jose';
+
+const COOKIE_NAME = 'qmh_session';
+
+function readSessionToken(request) {
+  // Same places the Python API looks: the httpOnly session cookie, then an Authorization header.
+  const cookieHeader = request.headers.cookie || '';
+  for (const part of cookieHeader.split(';')) {
+    const [name, ...rest] = part.trim().split('=');
+    if (name === COOKIE_NAME) return decodeURIComponent(rest.join('='));
+  }
+  const auth = request.headers.authorization || '';
+  if (auth.toLowerCase().startsWith('bearer ')) return auth.slice(7);
+  return null;
+}
+
+// Checks the session token is genuine and unexpired, signed with the same JWT_SECRET the Python
+// API uses (app/auth.py, HS256). A cookie that merely has the right name is not enough.
+async function verifySession(request) {
+  const token = readSessionToken(request);
+  const secret = process.env.JWT_SECRET;
+  if (!token || !secret) return null;
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
+      algorithms: ['HS256'],
+    });
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -17,10 +48,10 @@ export default async function handler(request, response) {
     return;
   }
 
-  // Require our own session cookie before handing out an upload token — otherwise anyone who
-  // finds this URL could upload arbitrary files to your Blob store for free.
-  const cookieHeader = request.headers.cookie || '';
-  if (!cookieHeader.includes('qmh_session=')) {
+  // Require a valid session before handing out an upload token — otherwise anyone who finds this
+  // URL could upload arbitrary files to your Blob store for free.
+  const session = await verifySession(request);
+  if (!session) {
     response.status(401).json({ error: 'Not signed in.' });
     return;
   }
