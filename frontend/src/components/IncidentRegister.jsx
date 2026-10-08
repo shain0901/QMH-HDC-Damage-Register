@@ -6,6 +6,7 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ZoneDot from './ZoneDot';
+import ExportAllButton from './ExportAllButton';
 import { api, can } from '../lib/api';
 
 const SHAIN_EMAIL = 'shain@hanmersolutions.co.nz';
@@ -99,7 +100,10 @@ export default function IncidentRegister({ incidents, role, onChanged }) {
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1} mb={2}>
           <Typography variant="h6" fontWeight={600}>Incident register</Typography>
-          <Button size="small" variant="outlined" component="a" href={api.exportCsvUrl()}>Export CSV</Button>
+          <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+            <Button size="small" variant="outlined" component="a" href={api.exportCsvUrl()}>Export CSV</Button>
+            {can(role, 'edit_full') && <ExportAllButton />}
+          </Stack>
         </Box>
 
         <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center" mb={2}>
