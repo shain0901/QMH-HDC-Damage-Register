@@ -63,6 +63,7 @@ export default function IncidentRegister({ incidents, role, onChanged }) {
     return drafts[i.id] || {
       police_status: i.police_status, police_number: i.police_number || '',
       repair_status: i.repair_status, repair_contractor: i.repair_contractor || '',
+      repair_date: i.repair_date || '',
     };
   }
   function setDraft(incident, patch) {
@@ -79,6 +80,7 @@ export default function IncidentRegister({ incidents, role, onChanged }) {
     if (can(role, 'edit_repair')) {
       allowed.repair_status = draft.repair_status;
       allowed.repair_contractor = draft.repair_contractor;
+      allowed.repair_date = draft.repair_date || null;
     }
     await api.patchIncident(i.id, allowed);
     onChanged();
@@ -211,6 +213,8 @@ export default function IncidentRegister({ incidents, role, onChanged }) {
                             <MenuItem value="Repaired">Repaired</MenuItem>
                           </Select>
                           <TextField size="small" label="Repair contractor" value={draft.repair_contractor} onChange={(e) => setDraft(i, { repair_contractor: e.target.value })} />
+                          <TextField size="small" label="Repair date" type="date" InputLabelProps={{ shrink: true }}
+                            value={draft.repair_date} onChange={(e) => setDraft(i, { repair_date: e.target.value })} />
                         </>
                       )}
                     </Stack>
